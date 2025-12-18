@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react'
 import { ThoughtForm, ThoughtList } from './components'
 import { fetchThoughts, postThought, likeThought } from './services/api'
+import { MIN_LENGTH, MAX_LENGTH } from './constants'
 import './App.css'
-
-const MIN_LENGTH = 5
-const MAX_LENGTH = 140
 
 export const App = () => {
   const [thoughts, setThoughts] = useState([])
