@@ -3,8 +3,8 @@
 // To switch back to real API, set USE_MOCK_API to false and update API_URL
 import { mockApi } from './mockApi.js'
 
-const USE_MOCK_API = true // Set to false to use real API
-const API_URL = 'https://happy-thoughts-technigo.herokuapp.com/thoughts'
+const USE_MOCK_API = false // Set to false to use real API
+const API_URL = 'https://happy-thoughts-api-4ful.onrender.com/thoughts'
 
 // Real API implementation
 const handleResponse = async (response) => {
