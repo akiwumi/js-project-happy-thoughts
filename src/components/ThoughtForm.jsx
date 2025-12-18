@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import './ThoughtForm.css'
 
-const MAX_LENGTH = 140
-const MIN_LENGTH = 5
 
 export const ThoughtForm = ({ onSubmit, isSubmitting, error }) => {
   const [newThought, setNewThought] = useState('')
