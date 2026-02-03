@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { ThoughtForm, ThoughtList } from './components'
+import Login from './login'
 import { fetchThoughts, postThought, likeThought } from './services/api'
 import { MIN_LENGTH, MAX_LENGTH } from './constants'
 import './App.css'
 
 export const App = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [thoughts, setThoughts] = useState([])
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -77,6 +79,10 @@ export const App = () => {
   // Separate form errors from API errors
   const formError = error && (error.includes('empty') || error.includes('short') || error.includes('long') || error.includes('post'))
   const apiError = error && !formError
+
+  if (!isLoggedIn) {
+    return <Login onLogin={() => setIsLoggedIn(true)} />
+  }
 
   return (
     <div className="app">
