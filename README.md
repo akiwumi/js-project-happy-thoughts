@@ -4,16 +4,18 @@ A positive social media app where users can share their happy thoughts and sprea
 
 ## 🌐 Live Demo
 
-**Netlify Link:** https://pebbleshappy-app.netlify.app
+**Netlify Link:** ""
 
 ## 🚀 Recent Updates
 
-- **API Endpoint Updated**: Switched to `https://happy-thoughts-api-4ful.onrender.com/thoughts`
-- **Code Refactoring**: Created shared constants file (`src/constants/index.js`) to eliminate duplication of `MIN_LENGTH` and `MAX_LENGTH` across components
-- **Improved Code Organization**: Better separation of concerns with constants in a dedicated directory
+- **Project Restructure**: Frontend and backend in separate directories
+- **Login & Registration**: User authentication with JWT
+- **Backend API**: Node.js + Express + MongoDB for auth endpoints
+- **API Endpoint**: Thoughts API at `https://happy-thoughts-api-4ful.onrender.com/thoughts`
 
 ## ✨ Features
 
+- Login and user registration
 - Post happy thoughts (5-140 characters)
 - Like other people's thoughts
 - Real-time character counter
@@ -23,40 +25,52 @@ A positive social media app where users can share their happy thoughts and sprea
 
 ## 🛠️ Tech Stack
 
-- React
-- Vite
-- CSS3
-- REST API
+**Frontend:** React, Vite, CSS3  
+**Backend:** Node.js, Express, TypeScript, MongoDB, Mongoose, JWT
 
 ## 📁 Project Structure
 
 ```
-src/
-├── components/         # React components
-│   ├── ThoughtForm.jsx
-│   ├── ThoughtList.jsx
-│   └── ThoughtCard.jsx
-├── services/          # API service layer
-│   ├── api.js
-│   └── mockApi.js
-├── constants/         # Shared constants
-│   └── index.js
-└── utils/            # Utility functions
-    └── timeUtils.js
+├── frontend/              # React + Vite application
+│   └── src/
+│       ├── components/    # React components
+│       ├── services/      # API service layer
+│       ├── constants/     # Shared constants
+│       └── utils/         # Utility functions
+│
+└── backend/               # Node.js + Express API
+    ├── config/            # Configuration
+    │   └── db.ts          # MongoDB connection
+    ├── controllers/       # Request handlers
+    │   └── auth.controller.ts
+    ├── modals/            # Mongoose models
+    │   └── User.ts
+    ├── routes/            # API routes
+    │   └── auth.routes.ts
+    ├── utils/             # Helper functions
+    │   └── token.ts       # JWT token utilities
+    ├── index.ts           # Application entry point
+    ├── types.ts           # TypeScript type definitions
+    └── package.json
 ```
 
 ## 🔧 Installation & Setup
 
 ```bash
-# Install dependencies
-npm install
+# Install frontend dependencies
+cd frontend && npm install
 
-# Run development server
+# Install backend dependencies
+cd ../backend && npm install
+
+# From project root - run frontend dev server
 npm run dev
 
-# Build for production
-npm run build
+# Run backend (in separate terminal)
+cd backend && npm run dev
 ```
+
+The frontend runs on `http://localhost:5173`, the backend on `http://localhost:3000`.
 
 ## 📝 API Configuration
 
@@ -65,7 +79,7 @@ The app uses the Happy Thoughts API endpoint:
 https://happy-thoughts-api-4ful.onrender.com/thoughts
 ```
 
-To change the API endpoint, update `API_URL` in `src/services/api.js`.
+To change the API endpoint, update `API_URL` in `frontend/src/services/api.js`.
 
 ## 🎯 Validation Rules
 
@@ -73,4 +87,4 @@ To change the API endpoint, update `API_URL` in `src/services/api.js`.
 - Maximum length: 140 characters
 - Thoughts cannot be empty
 
-These constants are defined in `src/constants/index.js` for easy maintenance.
+These constants are defined in `frontend/src/constants/index.js` for easy maintenance.
