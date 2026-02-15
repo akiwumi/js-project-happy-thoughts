@@ -13,8 +13,10 @@ export const App = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    loadThoughts()
-  }, [])
+    if (isLoggedIn) {
+      loadThoughts()
+    }
+  }, [isLoggedIn])
 
   const loadThoughts = async () => {
     setIsLoading(true)

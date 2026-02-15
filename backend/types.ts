@@ -19,3 +19,9 @@ export interface ConversationProps extends Document {
     createdAt: Date;
     updatedAt: Date;
 }
+
+export interface ThoughtProps extends Document {
+    message: string;
+    hearts: number;
+    createdAt: Date;
+}

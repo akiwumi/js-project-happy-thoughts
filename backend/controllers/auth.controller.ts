@@ -12,14 +12,24 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        const user = new User({ name, email, password });
+        const user = new User({
+            name,
+            email,
+            password
+        });
+
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(password, salt);
         await user.save();
 
         const token = generateToken(user);
-        res.json({ success: true, token });
+        res.json({
+            success: true,
+            token,
+            message: "Registration successful."
+        });
     } catch (error) {
+        console.error("Registration error:", error);
         res.status(500).json({ message: "Internal server error" });
     }
 };
@@ -32,11 +42,13 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
             res.status(400).json({ success: false, message: "User not found" });
             return;
         }
+
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             res.status(400).json({ message: "Invalid password" });
             return;
         }
+
         const token = generateToken(user);
         res.json({ success: true, token });
     } catch (error) {

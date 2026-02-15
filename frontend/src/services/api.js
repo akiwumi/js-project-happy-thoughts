@@ -3,8 +3,8 @@
 // To switch back to real API, set USE_MOCK_API to false and update API_URL
 import { mockApi } from './mockApi.js'
 
-const USE_MOCK_API = false // Set to false to use real API
-const API_URL = 'https://happy-thoughts-api-4ful.onrender.com/thoughts'
+const USE_MOCK_API = import.meta.env.VITE_USE_MOCK_API === 'true' // Set to false to use real API
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/thoughts'
 
 // Real API implementation
 const handleResponse = async (response) => {
@@ -67,6 +67,40 @@ const likeThoughtReal = async (thoughtId) => {
   }
 }
 
+const registerUserReal = async (name, email, password) => {
+  try {
+    const response = await fetch(`${API_URL.replace('/thoughts', '/auth/register')}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password }),
+    })
+    return await handleResponse(response)
+  } catch (err) {
+    if (err.name === 'TypeError' && err.message.includes('fetch')) {
+      throw new Error('Network error: Unable to connect to the server.')
+    }
+    throw err
+  }
+}
+
+const loginUserReal = async (email, password) => {
+  try {
+    const response = await fetch(`${API_URL.replace('/thoughts', '/auth/login')}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
+    return await handleResponse(response)
+  } catch (err) {
+    if (err.name === 'TypeError' && err.message.includes('fetch')) {
+      throw new Error('Network error: Unable to connect to the server.')
+    }
+    throw err
+  }
+}
+
+
+
 // Export functions that use either mock or real API
 export const fetchThoughts = USE_MOCK_API
   ? () => mockApi.fetchThoughts()
@@ -74,18 +108,25 @@ export const fetchThoughts = USE_MOCK_API
 
 export const postThought = USE_MOCK_API
   ? (message) => {
-      try {
-        return mockApi.postThought(message)
-      } catch (err) {
-        // Format error to match real API error structure
-        const error = new Error(err.errors?.message || err.message || 'Failed to post thought')
-        error.errors = err.errors
-        throw error
-      }
+    try {
+      return mockApi.postThought(message)
+    } catch (err) {
+      // Format error to match real API error structure
+      const error = new Error(err.errors?.message || err.message || 'Failed to post thought')
+      error.errors = err.errors
+      throw error
     }
+  }
   : postThoughtReal
 
 export const likeThought = USE_MOCK_API
   ? (thoughtId) => mockApi.likeThought(thoughtId)
   : likeThoughtReal
 
+export const registerUser = USE_MOCK_API
+  ? (name, email, password) => Promise.reject(new Error("Mock registration not implemented"))
+  : registerUserReal
+
+export const loginUser = USE_MOCK_API
+  ? (email, password) => Promise.reject(new Error("Mock login not implemented"))
+  : loginUserReal

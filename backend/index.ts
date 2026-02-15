@@ -4,6 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/auth.routes.js";
+import thoughtRoutes from "./routes/thought.routes.js";
 
 
 dotenv.config();
@@ -16,6 +17,7 @@ app.use(express.json());
 app.use(cors());
 
 app.use("/auth", authRoutes);
+app.use("/thoughts", thoughtRoutes);
 
 app.get("/", (req, res) => {
     res.send("Server is running");
