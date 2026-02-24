@@ -88,3 +88,16 @@ To change the API endpoint, update `API_URL` in `frontend/src/services/api.js`.
 - Thoughts cannot be empty
 
 These constants are defined in `frontend/src/constants/index.js` for easy maintenance.
+
+## 🚀 Deployment
+
+### Frontend (Netlify)
+The frontend is configured for Netlify deployment using `netlify.toml`.
+Ensure `VITE_API_URL` environment variable is set in Netlify.
+
+### Backend (Render/Heroku)
+The backend requires a separate deployment.
+Required environment variables:
+- `MONGO_URI`
+- `JWT_SECRET`
+- `PORT`
