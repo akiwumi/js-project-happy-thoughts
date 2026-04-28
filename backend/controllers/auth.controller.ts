@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import type { AuthRequest } from "../middleware/auth.js";
 import User from "../modals/User.js";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../utils/token.js";
@@ -18,7 +19,16 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         await user.save();
 
         const token = generateToken(user);
-        res.json({ success: true, token });
+        res.json({
+            success: true,
+            token,
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                avatar: user.avatar,
+            },
+        });
     } catch (error) {
         res.status(500).json({ message: "Internal server error" });
     }
@@ -38,8 +48,42 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
             return;
         }
         const token = generateToken(user);
-        res.json({ success: true, token });
+        res.json({
+            success: true,
+            token,
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                avatar: user.avatar,
+            },
+        });
     } catch (error) {
         res.status(500).json({ message: "Internal server error" });
     }
+};
+
+export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const user = await User.findById(req.user!.userId).select("-password");
+        if (!user) {
+            res.status(404).json({ message: "User not found" });
+            return;
+        }
+        res.json({
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                avatar: user.avatar,
+            },
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const logoutUser = async (_req: Request, res: Response): Promise<void> => {
+    // Token-based auth — client simply discards the token
+    res.json({ success: true, message: "Logged out" });
 };
