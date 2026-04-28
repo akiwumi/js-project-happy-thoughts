@@ -384,221 +384,262 @@ export default function ChatPage() {
 
       {/* Main Chat */}
       <main style={{ flex: 1, display: isMobile && mobileView === 'list' ? 'none' : 'flex', flexDirection: 'column', minWidth: 0 }}>
-        {activeChatId ? (
-          <>
-            {/* Chat Header */}
-            <div
-              style={{
-                padding: 16,
-                borderBottom: '1px solid var(--ds-muted, #edf2f5)',
-                background: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-              }}
-            >
-              {isMobile && (
-                <button
-                  onClick={() => setMobileView('list')}
-                  style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--ds-accent, #2ec8a8)', padding: 0, lineHeight: 1 }}
-                >←</button>
-              )}
-              <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: 'var(--ds-text, #24303a)' }}>
-                {chats.find(c => c._id === activeChatId)?.participants?.filter(p => p._id !== user?._id).map(p => p.name).join(', ') || 'Chat'}
-              </h2>
-            </div>
+        {/* Chat Header */}
+        <div
+          style={{
+            padding: 16,
+            borderBottom: '1px solid var(--ds-muted, #edf2f5)',
+            background: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+          }}
+        >
+          {isMobile && (
+            <button
+              onClick={() => setMobileView('list')}
+              style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--ds-accent, #2ec8a8)', padding: 0, lineHeight: 1 }}
+            >←</button>
+          )}
+          <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: 'var(--ds-text, #24303a)' }}>
+            {activeChatId
+              ? chats.find(c => c._id === activeChatId)?.participants?.filter(p => p._id !== user?._id).map(p => p.name).join(', ') || 'Chat'
+              : 'Start a conversation'}
+          </h2>
+        </div>
 
-            {/* Messages */}
+        {/* Messages */}
+        <div
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: 16,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 12,
+          }}
+        >
+          {!activeChatId ? (
             <div
               style={{
                 flex: 1,
-                overflowY: 'auto',
-                padding: 16,
                 display: 'flex',
-                flexDirection: 'column',
-                gap: 12,
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              {messages.length === 0 ? (
-                <div style={{ textAlign: 'center', color: 'var(--ds-subtext, #7b8790)' }}>
-                  No messages yet. Start the conversation!
+              <div style={{ maxWidth: 360, textAlign: 'center' }}>
+                <div style={{ fontSize: '18px', fontWeight: 600, color: 'var(--ds-text, #24303a)', marginBottom: 8 }}>
+                  No chat selected
                 </div>
-              ) : (
-                messages.map((msg, i) => (
-                  <div key={i}>
-                    <div
-                      style={{
-                        maxWidth: '60%',
-                        alignSelf: msg.sender === user?._id ? 'flex-end' : 'flex-start',
-                        padding: '10px 14px',
-                        borderRadius: '12px',
-                        background: msg.sender === user?._id ? '#e8f9f2' : 'white',
-                        color: 'var(--ds-text, #24303a)',
-                        fontSize: '14px',
-                        wordBreak: 'break-word',
-                        marginLeft: msg.sender === user?._id ? 'auto' : 0,
-                        position: 'relative',
-                      }}
-                    >
-                      <div style={{ fontSize: '12px', color: 'var(--ds-subtext, #7b8790)', marginBottom: 4 }}>
-                        {msg.senderName || 'User'}
+                <div style={{ color: 'var(--ds-subtext, #7b8790)', marginBottom: 16 }}>
+                  Pick a conversation from the sidebar or start a new one to unlock the message box.
+                </div>
+                <button
+                  onClick={() => setShowNewChat(true)}
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: 'linear-gradient(180deg, var(--ds-accent), var(--ds-accent-600))',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                  }}
+                >
+                  Start new chat
+                </button>
+              </div>
+            </div>
+          ) : messages.length === 0 ? (
+            <div style={{ textAlign: 'center', color: 'var(--ds-subtext, #7b8790)' }}>
+              No messages yet. Start the conversation!
+            </div>
+          ) : (
+            messages.map((msg, i) => (
+              <div key={i}>
+                <div
+                  style={{
+                    maxWidth: '60%',
+                    alignSelf: msg.sender === user?._id ? 'flex-end' : 'flex-start',
+                    padding: '10px 14px',
+                    borderRadius: '12px',
+                    background: msg.sender === user?._id ? '#e8f9f2' : 'white',
+                    color: 'var(--ds-text, #24303a)',
+                    fontSize: '14px',
+                    wordBreak: 'break-word',
+                    marginLeft: msg.sender === user?._id ? 'auto' : 0,
+                    position: 'relative',
+                  }}
+                >
+                  <div style={{ fontSize: '12px', color: 'var(--ds-subtext, #7b8790)', marginBottom: 4 }}>
+                    {msg.senderName || 'User'}
+                  </div>
+                  
+                  {editingMessageId === msg._id ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <input
+                        type="text"
+                        value={editingText}
+                        onChange={(e) => setEditingText(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && handleEditMessage(msg._id)}
+                        style={{
+                          padding: '8px',
+                          borderRadius: '6px',
+                          border: '1px solid var(--ds-muted, #edf2f5)',
+                          fontSize: '14px',
+                        }}
+                        autoFocus
+                      />
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          onClick={() => handleEditMessage(msg._id)}
+                          style={{
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            border: 'none',
+                            background: 'var(--ds-accent, #2ec8a8)',
+                            color: 'white',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                          }}
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={cancelEdit}
+                          style={{
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            border: '1px solid var(--ds-muted, #edf2f5)',
+                            background: 'white',
+                            color: 'var(--ds-text, #24303a)',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                          }}
+                        >
+                          Cancel
+                        </button>
                       </div>
-                      
-                      {editingMessageId === msg._id ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                          <input
-                            type="text"
-                            value={editingText}
-                            onChange={(e) => setEditingText(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && handleEditMessage(msg._id)}
-                            style={{
-                              padding: '8px',
-                              borderRadius: '6px',
-                              border: '1px solid var(--ds-muted, #edf2f5)',
-                              fontSize: '14px',
-                            }}
-                            autoFocus
-                          />
+                    </div>
+                  ) : (
+                    <div>
+                      {msg.text}
+                      {msg.sender === user?._id && (
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          marginTop: 4,
+                        }}>
+                          <div style={{ fontSize: '10px', color: 'var(--ds-subtext, #7b8790)' }}>
+                            {msg.seen ? '✓✓' : '✓'}
+                          </div>
                           <div style={{ display: 'flex', gap: 8 }}>
                             <button
-                              onClick={() => handleEditMessage(msg._id)}
+                              onClick={() => startEditMessage(msg)}
                               style={{
-                                padding: '6px 12px',
-                                borderRadius: '6px',
+                                background: 'none',
                                 border: 'none',
-                                background: 'var(--ds-accent, #2ec8a8)',
-                                color: 'white',
+                                color: 'var(--ds-subtext, #7b8790)',
                                 cursor: 'pointer',
-                                fontSize: '12px',
+                                fontSize: '10px',
+                                padding: 0,
                               }}
+                              title="Edit message"
                             >
-                              Save
+                              ✏️
                             </button>
                             <button
-                              onClick={cancelEdit}
+                              onClick={() => handleDeleteMessage(msg._id)}
                               style={{
-                                padding: '6px 12px',
-                                borderRadius: '6px',
-                                border: '1px solid var(--ds-muted, #edf2f5)',
-                                background: 'white',
-                                color: 'var(--ds-text, #24303a)',
+                                background: 'none',
+                                border: 'none',
+                                color: 'var(--ds-danger, #ff6b6b)',
                                 cursor: 'pointer',
-                                fontSize: '12px',
+                                fontSize: '10px',
+                                padding: 0,
                               }}
+                              title="Delete message"
                             >
-                              Cancel
+                              🗑️
                             </button>
                           </div>
                         </div>
-                      ) : (
-                        <div>
-                          {msg.text}
-                          {msg.sender === user?._id && (
-                            <div style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                              marginTop: 4,
-                            }}>
-                              <div style={{ fontSize: '10px', color: 'var(--ds-subtext, #7b8790)' }}>
-                                {msg.seen ? '✓✓' : '✓'}
-                              </div>
-                              <div style={{ display: 'flex', gap: 8 }}>
-                                <button
-                                  onClick={() => startEditMessage(msg)}
-                                  style={{
-                                    background: 'none',
-                                    border: 'none',
-                                    color: 'var(--ds-subtext, #7b8790)',
-                                    cursor: 'pointer',
-                                    fontSize: '10px',
-                                    padding: 0,
-                                  }}
-                                  title="Edit message"
-                                >
-                                  ✏️
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteMessage(msg._id)}
-                                  style={{
-                                    background: 'none',
-                                    border: 'none',
-                                    color: 'var(--ds-danger, #ff6b6b)',
-                                    cursor: 'pointer',
-                                    fontSize: '10px',
-                                    padding: 0,
-                                  }}
-                                  title="Delete message"
-                                >
-                                  🗑️
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
                       )}
                     </div>
-                  </div>
-                ))
-              )}
-              {typingList && (
-                <div
-                  style={{
-                    fontSize: '12px',
-                    color: 'var(--ds-accent, #2ec8a8)',
-                    fontStyle: 'italic',
-                    marginTop: 4,
-                  }}
-                >
-                  {typingList} is typing...
+                  )}
                 </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Composer */}
+              </div>
+            ))
+          )}
+          {activeChatId && typingList && (
             <div
               style={{
-                padding: 16,
-                borderTop: '1px solid var(--ds-muted, #edf2f5)',
-                background: 'white',
-                display: 'flex',
-                gap: 8,
+                fontSize: '12px',
+                color: 'var(--ds-accent, #2ec8a8)',
+                fontStyle: 'italic',
+                marginTop: 4,
               }}
             >
-              <input
-                type="text"
-                placeholder="Write your message..."
-                value={messageText}
-                onChange={(e) => {
-                  setMessageText(e.target.value)
-                  handleTyping()
-                }}
-                onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                style={{
-                  flex: 1,
-                  padding: '10px 12px',
-                  borderRadius: '10px',
-                  border: '1px solid var(--ds-muted, #edf2f5)',
-                  fontSize: '14px',
-                }}
-              />
-              <button onClick={sendMessage} style={{ padding: '10px 14px', borderRadius: '10px', border: 'none', background: 'linear-gradient(180deg, var(--ds-accent), var(--ds-accent-600))', color: 'white', cursor: 'pointer', fontSize: '14px', fontWeight: 600 }}>Send</button>
+              {typingList} is typing...
             </div>
-          </>
-        ) : (
-          <div
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Composer */}
+        <div
+          style={{
+            padding: 16,
+            borderTop: '1px solid var(--ds-muted, #edf2f5)',
+            background: 'white',
+            display: 'flex',
+            gap: 8,
+          }}
+        >
+          <input
+            type="text"
+            placeholder={activeChatId ? 'Write your message...' : 'Select or create a chat to start typing'}
+            value={messageText}
+            disabled={!activeChatId}
+            onChange={(e) => {
+              setMessageText(e.target.value)
+              handleTyping()
+            }}
+            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
             style={{
               flex: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--ds-subtext, #7b8790)',
+              padding: '10px 12px',
+              borderRadius: '10px',
+              border: '1px solid var(--ds-muted, #edf2f5)',
+              fontSize: '14px',
+              background: activeChatId ? 'white' : 'var(--ds-muted, #edf2f5)',
+              color: activeChatId ? 'var(--ds-text, #24303a)' : 'var(--ds-subtext, #7b8790)',
+            }}
+          />
+          <button
+            onClick={sendMessage}
+            disabled={!activeChatId || !messageText.trim()}
+            style={{
+              padding: '10px 14px',
+              borderRadius: '10px',
+              border: 'none',
+              background: !activeChatId || !messageText.trim()
+                ? 'var(--ds-muted, #edf2f5)'
+                : 'linear-gradient(180deg, var(--ds-accent), var(--ds-accent-600))',
+              color: !activeChatId || !messageText.trim()
+                ? 'var(--ds-subtext, #7b8790)'
+                : 'white',
+              cursor: !activeChatId || !messageText.trim() ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              fontWeight: 600,
             }}
           >
-            Select a chat to start messaging
-          </div>
-        )}
+            Send
+          </button>
+        </div>
       </main>
 
       {toast && <Toast message={toast.message} type={toast.type} />}
