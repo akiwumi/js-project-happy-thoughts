@@ -13,13 +13,45 @@ dotenv.config();
 const app = express();
 
 app.use(express.json());
-const allowedOrigins = [
+
+const normalizeOrigin = (origin: string) => origin.replace(/\/+$/, "");
+const configuredFrontendOrigins = (process.env.FRONTEND_URL || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+    .map(normalizeOrigin);
+
+const allowedOrigins = new Set([
     "http://localhost:5173",
-    process.env.FRONTEND_URL,
-].filter(Boolean);
+    ...configuredFrontendOrigins,
+]);
+
+const isAllowedOrigin = (origin?: string) => {
+    if (!origin) return true;
+
+    const normalizedOrigin = normalizeOrigin(origin);
+    if (allowedOrigins.has(normalizedOrigin)) {
+        return true;
+    }
+
+    // Vercel preview deployments use unique subdomains, so allow them when the
+    // configured frontend is hosted on Vercel.
+    const hasVercelFrontend = configuredFrontendOrigins.some((configuredOrigin) =>
+        configuredOrigin.endsWith(".vercel.app")
+    );
+
+    return hasVercelFrontend && normalizedOrigin.endsWith(".vercel.app");
+};
 
 app.use(cors({
-    origin: allowedOrigins,
+    origin(origin, callback) {
+        if (isAllowedOrigin(origin)) {
+            callback(null, true);
+            return;
+        }
+
+        callback(new Error(`Origin ${origin} is not allowed by CORS`));
+    },
     credentials: true,
 }));
 
@@ -39,7 +71,14 @@ const server = http.createServer(app);
 // Socket.IO setup
 const io = new Server(server, {
     cors: {
-        origin: allowedOrigins,
+        origin(origin, callback) {
+            if (isAllowedOrigin(origin)) {
+                callback(null, true);
+                return;
+            }
+
+            callback(new Error(`Origin ${origin} is not allowed by Socket.IO CORS`));
+        },
         credentials: true,
     },
 });

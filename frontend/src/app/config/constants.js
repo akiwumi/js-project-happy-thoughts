@@ -1,5 +1,12 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
-export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001'
+const rawApiBaseUrl = import.meta.env.VITE_API_URL?.trim()
+const fallbackLocalUrl = 'http://localhost:3001'
+
+const normalizeBaseUrl = (url) => url.replace(/\/+$/, '')
+
+export const API_BASE_URL = normalizeBaseUrl(rawApiBaseUrl || fallbackLocalUrl)
+export const SOCKET_URL = normalizeBaseUrl(import.meta.env.VITE_SOCKET_URL?.trim() || API_BASE_URL)
+
+export const HAS_PRODUCTION_API_URL = Boolean(rawApiBaseUrl)
 
 export const ROUTES = {
   HOME: '/',

@@ -1,5 +1,6 @@
 import React, { createContext, useReducer, useEffect } from 'react'
 import { authService } from '../../services/api'
+import { HAS_PRODUCTION_API_URL } from '../config/constants'
 
 export const AuthContext = createContext()
 
@@ -34,7 +35,10 @@ function authReducer(state, action) {
         loading: false,
       }
     case 'LOGOUT':
-      return initialState
+      return {
+        ...initialState,
+        loading: false,
+      }
     case 'SET_ERROR':
       return { ...state, error: action.payload, loading: false }
     case 'CLEAR_ERROR':
@@ -58,6 +62,14 @@ export function AuthProvider({ children }) {
   // Hydrate on mount
   useEffect(() => {
     const hydrateAuth = async () => {
+      if (import.meta.env.PROD && !HAS_PRODUCTION_API_URL) {
+        dispatch({
+          type: 'SET_ERROR',
+          payload: 'Deployment is missing VITE_API_URL, so auth requests cannot reach the backend.',
+        })
+        return
+      }
+
       const token = localStorage.getItem('token')
       const user = localStorage.getItem('user')
       
@@ -82,6 +94,7 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     dispatch({ type: 'SET_LOADING', payload: true })
+    dispatch({ type: 'CLEAR_ERROR' })
     try {
       const data = await authService.login(email, password)
       dispatch({ type: 'LOGIN_SUCCESS', payload: data })
@@ -95,6 +108,7 @@ export function AuthProvider({ children }) {
 
   const register = async (name, email, password) => {
     dispatch({ type: 'SET_LOADING', payload: true })
+    dispatch({ type: 'CLEAR_ERROR' })
     try {
       const data = await authService.register(name, email, password)
       dispatch({ type: 'REGISTER_SUCCESS', payload: data })
