@@ -3,6 +3,7 @@ import type { AuthRequest } from "../middleware/auth.js";
 import { Types } from "mongoose";
 import Message from "../modals/Message.js";
 import Chat from "../modals/Chat.js";
+import { ensureDefaultChatForUser } from "./chat.controller.js";
 
 // Get all messages for a chat
 export const getMessages = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -38,17 +39,19 @@ export const getMessages = async (req: AuthRequest, res: Response): Promise<void
 export const sendMessage = async (req: AuthRequest, res: Response): Promise<void> => {
     const { chatId, text } = req.body;
 
-    if (!chatId || !text) {
-        res.status(400).json({ message: "chatId and text are required" });
+    if (!text) {
+        res.status(400).json({ message: "text is required" });
         return;
     }
 
     try {
-        // Verify user is a participant
-        const chat = await Chat.findOne({
-            _id: new Types.ObjectId(Array.isArray(chatId) ? chatId[0] : chatId),
-            participants: req.user!.userId,
-        });
+        const chatIdStr = Array.isArray(chatId) ? chatId[0] : chatId;
+        const chat = chatIdStr
+            ? await Chat.findOne({
+                _id: new Types.ObjectId(chatIdStr),
+                participants: req.user!.userId,
+            })
+            : await ensureDefaultChatForUser(req.user!.userId);
 
         if (!chat) {
             res.status(403).json({ message: "Not a participant of this chat" });
@@ -56,7 +59,7 @@ export const sendMessage = async (req: AuthRequest, res: Response): Promise<void
         }
 
         const message = new Message({
-            chatId: new Types.ObjectId(Array.isArray(chatId) ? chatId[0] : chatId),
+            chatId: chat._id,
             sender: req.user!.userId,
             senderName: req.user!.name,
             text,

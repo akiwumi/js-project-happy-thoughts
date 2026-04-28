@@ -3,9 +3,34 @@ import type { AuthRequest } from "../middleware/auth.js";
 import Chat from "../modals/Chat.js";
 import User from "../modals/User.js";
 
+const DEFAULT_GROUP_CHAT_NAME = "Community";
+
+export const ensureDefaultChatForUser = async (userId: string) => {
+    let defaultChat = await Chat.findOne({
+        type: "group",
+        name: DEFAULT_GROUP_CHAT_NAME,
+    });
+
+    if (!defaultChat) {
+        defaultChat = await Chat.create({
+            type: "group",
+            name: DEFAULT_GROUP_CHAT_NAME,
+            participants: [userId],
+            createdBy: userId,
+        });
+    } else if (!defaultChat.participants.some((participantId) => participantId.toString() === userId)) {
+        defaultChat.participants.push(userId as any);
+        await defaultChat.save();
+    }
+
+    return defaultChat;
+};
+
 // Get all chats for the authenticated user
 export const getChats = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
+        await ensureDefaultChatForUser(req.user!.userId);
+
         const chats = await Chat.find({ participants: req.user!.userId })
             .populate("participants", "name email avatar")
             .populate("lastMessage")

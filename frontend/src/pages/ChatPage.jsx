@@ -110,13 +110,14 @@ export default function ChatPage() {
     try {
       setLoading(true)
       const data = await chatService.getChats()
-      setChats(Array.isArray(data) ? data : data.chats || [])
-      // Set first chat as active if not already set
-      if (!activeChatId && (Array.isArray(data) ? data[0] : data.chats?.[0])) {
-        setActiveChatId(
-          (Array.isArray(data) ? data[0] : data.chats?.[0])?._id
-        )
-      }
+      const nextChats = Array.isArray(data) ? data : data.chats || []
+      setChats(nextChats)
+      setActiveChatId((currentActiveChatId) => {
+        if (currentActiveChatId && nextChats.some((chat) => chat._id === currentActiveChatId)) {
+          return currentActiveChatId
+        }
+        return nextChats[0]?._id || null
+      })
     } catch (err) {
       showError('Failed to load chats')
     } finally {
@@ -134,16 +135,21 @@ export default function ChatPage() {
   }
 
   const sendMessage = async () => {
-    if (!messageText.trim() || !activeChatId) return
+    const trimmedMessage = messageText.trim()
+    if (!trimmedMessage) return
 
     setMessageText('')
 
     try {
-      const sentMsg = await chatService.sendMessage(activeChatId, messageText)
+      const sentMsg = await chatService.sendMessage(activeChatId, trimmedMessage)
       setMessages((prev) => {
         if (prev.some((m) => m._id === sentMsg._id)) return prev
         return [...prev, sentMsg]
       })
+      if (!activeChatId && sentMsg.chatId) {
+        setActiveChatId(String(sentMsg.chatId))
+      }
+      fetchChats()
       success('Message sent')
     } catch (err) {
       showError('Failed to send message')
@@ -252,6 +258,11 @@ export default function ChatPage() {
       showError('Failed to start chat')
     }
   }
+
+  const activeChat = chats.find((chat) => chat._id === activeChatId) || null
+  const activeChatTitle = activeChat?.name
+    || activeChat?.participants?.filter((p) => p._id !== user?._id).map((p) => p.name).join(', ')
+    || 'Chat'
 
   const typingList = Object.values(typingUsers).join(', ')
 
@@ -402,9 +413,7 @@ export default function ChatPage() {
             >←</button>
           )}
           <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: 'var(--ds-text, #24303a)' }}>
-            {activeChatId
-              ? chats.find(c => c._id === activeChatId)?.participants?.filter(p => p._id !== user?._id).map(p => p.name).join(', ') || 'Chat'
-              : 'Start a conversation'}
+            {activeChatId ? activeChatTitle : 'Start a conversation'}
           </h2>
         </div>
 
@@ -430,10 +439,10 @@ export default function ChatPage() {
             >
               <div style={{ maxWidth: 360, textAlign: 'center' }}>
                 <div style={{ fontSize: '18px', fontWeight: 600, color: 'var(--ds-text, #24303a)', marginBottom: 8 }}>
-                  No chat selected
+                  Start talking right away
                 </div>
                 <div style={{ color: 'var(--ds-subtext, #7b8790)', marginBottom: 16 }}>
-                  Pick a conversation from the sidebar or start a new one to unlock the message box.
+                  Your message can be posted immediately, even before you open a chat from the sidebar.
                 </div>
                 <button
                   onClick={() => setShowNewChat(true)}
@@ -601,12 +610,13 @@ export default function ChatPage() {
         >
           <input
             type="text"
-            placeholder={activeChatId ? 'Write your message...' : 'Select or create a chat to start typing'}
+            placeholder={activeChatId ? `Message ${activeChatTitle}...` : 'Write a message and we will post it for you'}
             value={messageText}
-            disabled={!activeChatId}
             onChange={(e) => {
               setMessageText(e.target.value)
-              handleTyping()
+              if (activeChatId) {
+                handleTyping()
+              }
             }}
             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
             style={{
@@ -615,24 +625,24 @@ export default function ChatPage() {
               borderRadius: '10px',
               border: '1px solid var(--ds-muted, #edf2f5)',
               fontSize: '14px',
-              background: activeChatId ? 'white' : 'var(--ds-muted, #edf2f5)',
-              color: activeChatId ? 'var(--ds-text, #24303a)' : 'var(--ds-subtext, #7b8790)',
+              background: 'white',
+              color: 'var(--ds-text, #24303a)',
             }}
           />
           <button
             onClick={sendMessage}
-            disabled={!activeChatId || !messageText.trim()}
+            disabled={!messageText.trim()}
             style={{
               padding: '10px 14px',
               borderRadius: '10px',
               border: 'none',
-              background: !activeChatId || !messageText.trim()
+              background: !messageText.trim()
                 ? 'var(--ds-muted, #edf2f5)'
                 : 'linear-gradient(180deg, var(--ds-accent), var(--ds-accent-600))',
-              color: !activeChatId || !messageText.trim()
+              color: !messageText.trim()
                 ? 'var(--ds-subtext, #7b8790)'
                 : 'white',
-              cursor: !activeChatId || !messageText.trim() ? 'not-allowed' : 'pointer',
+              cursor: !messageText.trim() ? 'not-allowed' : 'pointer',
               fontSize: '14px',
               fontWeight: 600,
             }}
