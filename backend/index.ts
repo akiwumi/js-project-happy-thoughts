@@ -15,14 +15,22 @@ const app = express();
 app.use(express.json());
 
 const normalizeOrigin = (origin: string) => origin.replace(/\/+$/, "");
-const configuredFrontendOrigins = (process.env.FRONTEND_URL || "")
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean)
-    .map(normalizeOrigin);
+const parseConfiguredOrigins = (...values: Array<string | undefined>) =>
+    values
+        .flatMap((value) => (value || "").split(","))
+        .map((origin) => origin.trim())
+        .filter(Boolean)
+        .map(normalizeOrigin);
+
+const configuredFrontendOrigins = parseConfiguredOrigins(
+    process.env.FRONTEND_URL,
+    process.env.CLIENT_URL,
+    process.env.CORS_ORIGIN
+);
 
 const allowedOrigins = new Set([
     "http://localhost:5173",
+    "https://js-project-happy-thoughts.vercel.app",
     ...configuredFrontendOrigins,
 ]);
 
@@ -67,6 +75,8 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 const server = http.createServer(app);
+
+console.log("Allowed CORS origins:", Array.from(allowedOrigins).join(", "));
 
 // Socket.IO setup
 const io = new Server(server, {
